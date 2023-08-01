@@ -7,34 +7,26 @@ using System.Threading;
 
 public class SocketClient : MonoBehaviour
 {
+    private const string serverIP = "127.0.0.1"; // 服务端IP地址
+    private const int serverPort = 8888;        // 服务端监听的端口号
     private Socket clientSocket;
-    private Thread clientThread;
-    private byte[] buffer = new byte[1024];
-
-    public string serverIP = "127.0.0.1"; // 服务器IP地址
-    public int serverPort = 12345; // 服务器端口号
+    private byte[] receiveBuffer = new byte[1024];
 
     private void Start()
     {
         ConnectToServer();
     }
 
-    private void OnDestroy()
-    {
-        DisconnectFromServer();
+    private void OnDestroy() {
+        clientSocket.Close();
     }
 
     private void ConnectToServer()
     {
-        clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
         try
         {
-            clientSocket.Connect(new IPEndPoint(IPAddress.Parse(serverIP), serverPort));
-            Debug.Log("Connected to server: " + serverIP + ":" + serverPort);
-
-            clientThread = new Thread(ReceiveData);
-            clientThread.Start();
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            clientSocket.BeginConnect(IPAddress.Parse(serverIP), serverPort, ConnectCallback, clientSocket);
         }
         catch (Exception e)
         {
@@ -42,50 +34,76 @@ public class SocketClient : MonoBehaviour
         }
     }
 
-    private void ReceiveData()
+    private void ConnectCallback(IAsyncResult ar)
     {
-        while (clientSocket.Connected)
+        try
         {
-            try
-            {
-                int bytesRead = clientSocket.Receive(buffer);
-                if (bytesRead > 0)
-                {
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Debug.Log("Received from server: " + message);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("Error receiving data from server: " + e.Message);
-                break;
-            }
+            Socket socket = (Socket)ar.AsyncState;
+            socket.EndConnect(ar);
+            Debug.Log("Connected to server.");
+
+            // 发送连接消息
+            string message = "我已连接\n";
+            SendDataToServer(message);
+
+            // 开始异步接收数据
+            socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ReceiveCallback, socket);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error in ConnectCallback: " + e.Message);
         }
     }
 
-    private void DisconnectFromServer()
+    private void ReceiveCallback(IAsyncResult ar)
     {
-        if (clientSocket != null && clientSocket.Connected)
+        try
         {
-            clientSocket.Close();
-            clientSocket = null;
-            Debug.Log("Disconnected from server.");
-        }
+            Socket socket = (Socket)ar.AsyncState;
+            int bytesRead = socket.EndReceive(ar);
 
-        if (clientThread != null && clientThread.IsAlive)
+            if (bytesRead > 0)
+            {
+                byte[] receivedData = new byte[bytesRead];
+                Array.Copy(receiveBuffer, receivedData, bytesRead);
+
+                // 处理收到的消息
+                string receivedMessage = Encoding.UTF8.GetString(receivedData);
+                Debug.Log("Received from server: " + receivedMessage);
+
+                // 继续异步接收数据
+                socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ReceiveCallback, socket);
+            }
+        }
+        catch (Exception e)
         {
-            clientThread.Join();
-            clientThread = null;
+            Debug.LogError("Error in ReceiveCallback: " + e.Message);
         }
     }
 
-    // 发送数据到服务器
     public void SendDataToServer(string data)
     {
-        if (clientSocket != null && clientSocket.Connected)
+        try
         {
-            byte[] dataBytes = Encoding.UTF8.GetBytes(data);
-            clientSocket.Send(dataBytes);
+            byte[] sendData = Encoding.UTF8.GetBytes(data);
+            clientSocket.BeginSend(sendData, 0, sendData.Length, SocketFlags.None, SendCallback, clientSocket);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error sending data to server: " + e.Message);
+        }
+    }
+
+    private void SendCallback(IAsyncResult ar)
+    {
+        try
+        {
+            Socket socket = (Socket)ar.AsyncState;
+            socket.EndSend(ar);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error in SendCallback: " + e.Message);
         }
     }
 }

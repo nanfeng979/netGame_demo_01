@@ -1,29 +1,61 @@
 package org.example;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Main {
+    private static final int PORT = 8888;
+
     public static void main(String[] args) {
-        int port = 12345; // 服务端监听的端口号
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
-            System.out.println("服务器已启动，正在监听端口：" + port);
+            ServerSocket serverSocket = new ServerSocket(PORT);
+            System.out.println("服务器启动，正在监听端口 " + PORT);
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                String clientIP = clientSocket.getInetAddress().getHostAddress();
-                int clientPort = clientSocket.getPort();
-                System.out.println("客户端连接成功，IP地址：" + clientIP + "，端口号：" + clientPort);
+                System.out.println("客户端连接成功，IP: " + clientSocket.getInetAddress() + ", 端口: " + clientSocket.getPort());
 
-                // 可以在这里对客户端进行处理，例如启动一个新的线程来处理与客户端的交互
-
-                // 为了简单起见，这里直接关闭与客户端的连接
-                clientSocket.close();
+                // 创建一个新线程处理客户端连接
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                Thread thread = new Thread(clientHandler);
+                thread.start();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class ClientHandler implements Runnable {
+    private final Socket clientSocket;
+
+    public ClientHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+    }
+
+    @Override
+    public void run() {
+        try {
+            // 处理客户端连接，你可以在这里添加游戏逻辑
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out.println("连接成功，欢迎进入游戏！");
+
+            // 这里可以添加更多的游戏逻辑和交互
+            // ...
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            String clientMessage;
+            while((clientMessage = in.readLine()) != null){
+                System.out.println("收到客户端消息:" + clientMessage);
+
+                // 处理客户端消息
+                // ...
+            }
+
+//            clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
