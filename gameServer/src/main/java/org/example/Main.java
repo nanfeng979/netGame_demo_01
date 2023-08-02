@@ -6,8 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -19,10 +18,10 @@ import javax.security.auth.callback.Callback;
 public class Main {
     private static final int PORT = 8888;
 
-    public static List<String> PlayerList;
+    public static Map<Socket, String> PlayerList;
 
     public static void main(String[] args) {
-        PlayerList = new ArrayList<>();
+        PlayerList = new HashMap<>();
 
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
@@ -36,6 +35,9 @@ public class Main {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("客户端连接成功，IP: " + clientSocket.getInetAddress() + ", 端口: " + clientSocket.getPort());
+                if (!PlayerList.containsKey(clientSocket)) {
+                    PlayerList.put(clientSocket, "");
+                }
 
                 // 创建一个新线程处理客户端连接
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
@@ -61,8 +63,8 @@ public class Main {
 
     private static void printPlayerList() {
         System.out.println("当前玩家列表：");
-        for (String player : PlayerList) {
-            System.out.print(player + "__");
+        for (Map.Entry<Socket, String> entry : PlayerList.entrySet()) {
+            System.out.print(entry.getValue() + "__");
         }
         System.out.println();
         System.out.println("--------------------");
@@ -95,7 +97,7 @@ class ClientHandler implements Runnable {
                 System.out.println("收到来自" +  message.getSender() + "的客户端消息:" + clientMessage);
 
                 // 管理PlayerList中玩家的接入与移出
-                playerListManager(message);
+                playerListManager(clientSocket, message);
             }
 
 //            clientSocket.close();
@@ -104,12 +106,12 @@ class ClientHandler implements Runnable {
         }
     }
 
-    private static void playerListManager(Message message) {
+    private static void playerListManager(Socket socket, Message message) {
         String name = message.getSender();
         if (message.getType() == MessageType.ADD_PLAYER) {
-            Main.PlayerList.add(name);
+            Main.PlayerList.put(socket, message.getSender());
         } else if (message.getType() == MessageType.REMOVE_PLAYER) {
-            Main.PlayerList.remove(name);
+            Main.PlayerList.remove(socket);
         }
         System.out.println("来自客户端: " + name);
     }
