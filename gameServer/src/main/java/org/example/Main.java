@@ -24,13 +24,14 @@ public class Main {
     public static void main(String[] args) {
         PlayerList = new ArrayList<>();
 
-        TimedReply(2, () -> {
-            printPlayerList();
-        });
-
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println("服务器启动，正在监听端口 " + PORT);
+
+            // 输出当前PlayerList列表
+            TimedReply(2, () -> {
+                printPlayerList();
+            });
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -87,26 +88,29 @@ class ClientHandler implements Runnable {
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String clientMessage;
             while((clientMessage = reader.readLine()) != null){
-                System.out.println("收到客户端消息:" + clientMessage);
-
                 // 处理客户端消息
                 // 将消息反序列化
                 ObjectMapper jsonObject = new ObjectMapper();
                 Message message = jsonObject.readValue(clientMessage, Message.class);
+                System.out.println("收到来自" +  message.getSender() + "的客户端消息:" + clientMessage);
 
-                String name = message.getSender();
-                if (message.getType() == MessageType.ADD_PLAYER) {
-                    Main.PlayerList.add(name);
-                } else if (message.getType() == MessageType.REMOVE_PLAYER) {
-                    Main.PlayerList.remove(name);
-                }
-
-                System.out.println("来自客户端: " + name);
+                // 管理PlayerList中玩家的接入与移出
+                playerListManager(message);
             }
 
 //            clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void playerListManager(Message message) {
+        String name = message.getSender();
+        if (message.getType() == MessageType.ADD_PLAYER) {
+            Main.PlayerList.add(name);
+        } else if (message.getType() == MessageType.REMOVE_PLAYER) {
+            Main.PlayerList.remove(name);
+        }
+        System.out.println("来自客户端: " + name);
     }
 }
