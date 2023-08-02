@@ -23,9 +23,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (playerName != null) {
-            Debug.Log(playerName);
-        }
+        
     }
 
     public void SetPlayerName(string name)

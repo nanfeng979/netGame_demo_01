@@ -1,19 +1,12 @@
 package org.example;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import javax.security.auth.callback.Callback;
 
 public class Main {
     private static final int PORT = 8888;
@@ -68,51 +61,5 @@ public class Main {
         }
         System.out.println();
         System.out.println("--------------------");
-    }
-}
-
-class ClientHandler implements Runnable {
-    private final Socket clientSocket;
-
-    public ClientHandler(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-    }
-
-    @Override
-    public void run() {
-        try {
-            // 处理客户端连接，你可以在这里添加游戏逻辑
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            // 客户端连接时，返回确认连接的响应消息
-            out.println("连接成功，欢迎进入游戏！");
-
-            // 接收客户端消息
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            String clientMessage;
-            while((clientMessage = reader.readLine()) != null){
-                // 处理客户端消息
-                // 将消息反序列化
-                ObjectMapper jsonObject = new ObjectMapper();
-                Message message = jsonObject.readValue(clientMessage, Message.class);
-                System.out.println("收到来自" +  message.getSender() + "的客户端消息:" + clientMessage);
-
-                // 管理PlayerList中玩家的接入与移出
-                playerListManager(clientSocket, message);
-            }
-
-//            clientSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void playerListManager(Socket socket, Message message) {
-        String name = message.getSender();
-        if (message.getType() == MessageType.ADD_PLAYER) {
-            Main.PlayerList.put(socket, message.getSender());
-        } else if (message.getType() == MessageType.REMOVE_PLAYER) {
-            Main.PlayerList.remove(socket);
-        }
-        System.out.println("来自客户端: " + name);
     }
 }
