@@ -1,26 +1,20 @@
-package org.example;
-
-enum MessageType {
+public enum MessageType {
     ADD_PLAYER,
     REMOVE_PLAYER
 }
 
 public class Message {
-    private String content;
-    private MessageType type;
-    private String sender;
+    public string content;
+    public MessageType type;
+    public string sender;
 
-    public Message() {
-
-    }
-
-    public Message(String content, MessageType type, String sender) {
+    public Message(string content, MessageType type, string sender) {
         this.content = content;
         this.type = type;
         this.sender = sender;
     }
 
-    public String getContent() {
+    public string getContent() {
         return content;
     }
 
@@ -28,12 +22,11 @@ public class Message {
         return type;
     }
 
-    public String getSender() {
+    public string getSender() {
         return sender;
     }
 
-    @Override
-    public String toString() {
+    public string toJsonString() {
         return "Message{" +
                 "content='" + content + '\'' +
                 ", type=" + type +

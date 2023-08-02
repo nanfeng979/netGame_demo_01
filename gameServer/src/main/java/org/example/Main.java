@@ -6,11 +6,28 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import javax.security.auth.callback.Callback;
 
 public class Main {
     private static final int PORT = 8888;
 
+    public static List<String> PlayerList;
+
     public static void main(String[] args) {
+        PlayerList = new ArrayList<>();
+
+        TimedReply(2, () -> {
+            printPlayerList();
+        });
+
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println("服务器启动，正在监听端口 " + PORT);
@@ -28,6 +45,27 @@ public class Main {
             e.printStackTrace();
         }
     }
+
+    interface Calllback {
+        void onCall();
+    }
+
+    private static void TimedReply(int time, Calllback calllback) {
+        // 定时任务
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
+            calllback.onCall();
+        }, 0, time, TimeUnit.SECONDS); // 每隔x秒执行一次
+    }
+
+    private static void printPlayerList() {
+        System.out.println("当前玩家列表：");
+        for (String player : PlayerList) {
+            System.out.print(player + "__");
+        }
+        System.out.println();
+        System.out.println("--------------------");
+    }
 }
 
 class ClientHandler implements Runnable {
@@ -42,17 +80,28 @@ class ClientHandler implements Runnable {
         try {
             // 处理客户端连接，你可以在这里添加游戏逻辑
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            // 客户端连接时，返回确认连接的响应消息
             out.println("连接成功，欢迎进入游戏！");
 
-            // 这里可以添加更多的游戏逻辑和交互
-            // ...
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            // 接收客户端消息
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String clientMessage;
-            while((clientMessage = in.readLine()) != null){
+            while((clientMessage = reader.readLine()) != null){
                 System.out.println("收到客户端消息:" + clientMessage);
 
                 // 处理客户端消息
-                // ...
+                // 将消息反序列化
+                ObjectMapper jsonObject = new ObjectMapper();
+                Message message = jsonObject.readValue(clientMessage, Message.class);
+
+                String name = message.getSender();
+                if (message.getType() == MessageType.ADD_PLAYER) {
+                    Main.PlayerList.add(name);
+                } else if (message.getType() == MessageType.REMOVE_PLAYER) {
+                    Main.PlayerList.remove(name);
+                }
+
+                System.out.println("来自客户端: " + name);
             }
 
 //            clientSocket.close();

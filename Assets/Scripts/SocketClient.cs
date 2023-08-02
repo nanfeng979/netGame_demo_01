@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Newtonsoft.Json;
 
 public class SocketClient : MonoBehaviour
 {
@@ -18,6 +19,9 @@ public class SocketClient : MonoBehaviour
     }
 
     private void OnDestroy() {
+        // 发送断开消息
+        Message message = new Message("我已关闭", MessageType.REMOVE_PLAYER, "yuqingxiang");
+        SendDataToServer(message);
         clientSocket.Close();
     }
 
@@ -43,7 +47,7 @@ public class SocketClient : MonoBehaviour
             Debug.Log("Connected to server.");
 
             // 发送连接消息
-            string message = "我已连接\n";
+            Message message = new Message("我已连接", MessageType.ADD_PLAYER, "yuqingxiang");
             SendDataToServer(message);
 
             // 开始异步接收数据
@@ -81,11 +85,11 @@ public class SocketClient : MonoBehaviour
         }
     }
 
-    public void SendDataToServer(string data)
+    public void SendDataToServer(Message data)
     {
         try
         {
-            byte[] sendData = Encoding.UTF8.GetBytes(data);
+            byte[] sendData = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data) + '\n');
             clientSocket.BeginSend(sendData, 0, sendData.Length, SocketFlags.None, SendCallback, clientSocket);
         }
         catch (Exception e)
