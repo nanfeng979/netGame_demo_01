@@ -20,7 +20,7 @@ public class SocketClient : MonoBehaviour
 
     private void OnDestroy() {
         // 发送断开消息
-        Message message = new Message("我已关闭", MessageType.REMOVE_PLAYER, "yuqingxiang");
+        Message message = new Message("我已关闭", MessageType.REMOVE_PLAYER, GameManager.instance.GetPlayerName());
         SendDataToServer(message);
         clientSocket.Close();
     }
@@ -47,7 +47,7 @@ public class SocketClient : MonoBehaviour
             Debug.Log("Connected to server.");
 
             // 发送连接消息
-            Message message = new Message("我已连接", MessageType.ADD_PLAYER, "yuqingxiang");
+            Message message = new Message("我已连接", MessageType.ADD_PLAYER, GameManager.instance.GetPlayerName());
             SendDataToServer(message);
 
             // 开始异步接收数据

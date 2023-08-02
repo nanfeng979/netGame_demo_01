@@ -47,15 +47,15 @@ public class Main {
         }
     }
 
-    interface Calllback {
+    interface TimedReplyCalllback {
         void onCall();
     }
 
-    private static void TimedReply(int time, Calllback calllback) {
+    private static void TimedReply(int time, TimedReplyCalllback timedReplyCalllback) {
         // 定时任务
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> {
-            calllback.onCall();
+            timedReplyCalllback.onCall();
         }, 0, time, TimeUnit.SECONDS); // 每隔x秒执行一次
     }
 
