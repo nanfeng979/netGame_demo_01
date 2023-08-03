@@ -12,6 +12,10 @@ import java.util.Map;
 class ClientHandler implements Runnable {
     private final Socket clientSocket;
 
+    // 初始化ObjectMapper对象
+    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static Message message;
+
     public ClientHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
     }
@@ -19,75 +23,74 @@ class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            // 客户端连接时，返回确认连接的响应消息
-//            sendMessage(clientSocket, "连接成功，欢迎进入游戏！");
-
             // 接收客户端消息
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            // 处理客户端消息
             String clientMessage;
             while((clientMessage = reader.readLine()) != null){
-                // 处理客户端消息
                 // 将消息反序列化
                 ObjectMapper jsonObject = new ObjectMapper();
-                Message message = jsonObject.readValue(clientMessage, Message.class);
-
-                // 管理PlayerList中玩家的接入与移出
-                playerListManager(clientSocket, message, clientMessage);
+                message = jsonObject.readValue(clientMessage, Message.class);
+                // 管理接收到的Message
+                messageManager(clientSocket, message, clientMessage);
             }
-
 //            clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void playerListManager(Socket socket, Message message, String jsonMessage) {
-        String name = message.getSender();
+    private static void messageManager(Socket socket, Message message, String jsonMessage) {
+        // 收到广播消息
         if (message.getType() == MessageType.Broadcast) {
+            // 玩家加入
             if (message.getDoing() == DoingType.ADD_PLAYER) {
+                // 将该玩家添加到PlayerList
                 Main.PlayerList.put(socket, message.getPlayerData());
-//            broadcastMessage(name + "加入游戏");
-//                // 当有新玩家加入时，广播给其他人
-//                broadcastMessage(jsonMessage);
-
-            } else if (message.getDoing() == DoingType.UPDATE_PLAYER) {
-                // 新加入后会由系统通知目前总共有多少人
-                // 初始化ObjectMapper对象
-                ObjectMapper objectMapper = new ObjectMapper();
-
-                Message sendAllPlayerData = new Message();
-                sendAllPlayerData.SetType(MessageType.Single);
-                sendAllPlayerData.SetDoing(DoingType.UPDATE_PLAYER);
-                sendAllPlayerData.SetSender("System");
-
-                String jsonString = "";
-                for (Map.Entry<Socket, PlayerData> entry : Main.PlayerList.entrySet()) {
-                    sendAllPlayerData.SetPlayerData(entry.getValue());
-                    try {
-                        // 将Person对象序列化为JSON字符串
-                        jsonString += objectMapper.writeValueAsString(sendAllPlayerData) + "&&";
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                sendMessage(socket, jsonString);
             }
-
+            // 向发送方单播，发送所有的玩家信息给该发送方
+            else if (message.getDoing() == DoingType.UPDATE_PLAYER) {
+                // 向某一方更新所有的玩家信息
+                Update_Player_Single(socket);
+            }
+            // 玩家退出
             else if (message.getDoing() == DoingType.REMOVE_PLAYER) {
+                // 将该玩家从PlayerList移出
                 Main.PlayerList.remove(socket);
-//            broadcastMessage(name + "离开游戏");
-//            broadcastMessage(message.toString());
             }
-        } else if (message.getType() == MessageType.Single) {
-            // 目前默认单播仅有将所有角色信息发送给某一用户
-            System.out.println("来自客户端: " + jsonMessage);
+        }
+        // 收到单播消息
+        else if (message.getType() == MessageType.Single) {
+
         }
     }
 
+    // 向某一方更新所有的玩家信息
+    private static void Update_Player_Single(Socket socket) {
+        // 组装所有玩家基础信息
+        Message playerDataMessage = new Message();
+        playerDataMessage.SetType(MessageType.Single);
+        playerDataMessage.SetDoing(DoingType.UPDATE_PLAYER);
+        playerDataMessage.SetSender("System");
+
+        String allPlayerDataMessage = "";
+        for (Map.Entry<Socket, PlayerData> entry : Main.PlayerList.entrySet()) {
+            // 增加各个玩家的playerData
+            playerDataMessage.SetPlayerData(entry.getValue());
+            try {
+                // todo：分开发送
+                allPlayerDataMessage += objectMapper.writeValueAsString(playerDataMessage) + "&&";
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 单播消息
+        sendMessage(socket, allPlayerDataMessage);
+    }
+
     // 广播消息给所有客户端
-    public static void broadcastMessage(String message) {
+    private static void broadcastMessage(String message) {
         for (Map.Entry<Socket, PlayerData> entry : Main.PlayerList.entrySet()) {
             try {
                 PrintWriter out = new PrintWriter(entry.getKey().getOutputStream(), true);
@@ -99,7 +102,7 @@ class ClientHandler implements Runnable {
     }
 
     // 单播消息给某个客户端
-    public static void sendMessage(Socket socket, String message) {
+    private static void sendMessage(Socket socket, String message) {
         try {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             out.println(message);
@@ -108,6 +111,4 @@ class ClientHandler implements Runnable {
             e.printStackTrace();
         }
     }
-
-
 }
