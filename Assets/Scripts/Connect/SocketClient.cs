@@ -13,14 +13,39 @@ public class SocketClient : MonoBehaviour
     private Socket clientSocket;
     private byte[] receiveBuffer = new byte[1024];
 
+    [SerializeField]
+    private GameObject player;
+
+    private float timer = 1.0f;
+    private float cd = 0.0f;
+
     private void Start()
     {
         ConnectToServer();
     }
 
+    private void Update()
+    {
+        // 1s执行一次Update_player()
+        cd += Time.deltaTime;
+        if(cd > timer) {
+            cd = 0;
+            Update_player();
+        }
+        // Invoke(nameof(Update_player), 3.0f);
+    }
+
+    private void Update_player()
+    {
+        PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, "", null);
+        Message message = new Message(MessageType.Broadcast, DoingType.UPDATE_PLAYER, playerData, GameManager.instance.GetPlayerName(), 0);
+        SendDataToServer(message);
+    }
+
     private void OnDestroy() {
         // 发送断开消息
-        Message message = new Message("我已关闭", MessageType.REMOVE_PLAYER, GameManager.instance.GetPlayerName());
+        PlayerData playerData = new PlayerData(PlayerDataType.REMOVE_PLAYER, "", null);
+        Message message = new Message(MessageType.Broadcast, DoingType.REMOVE_PLAYER, playerData, GameManager.instance.GetPlayerName(), 0);
         SendDataToServer(message);
         clientSocket.Close();
     }
@@ -47,7 +72,12 @@ public class SocketClient : MonoBehaviour
             Debug.Log("Connected to server.");
 
             // 发送连接消息
-            Message message = new Message("我已连接", MessageType.ADD_PLAYER, GameManager.instance.GetPlayerName());
+            float positionX = 0;
+            float positionY = 0;
+            float positionZ = 0;
+            PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, GameManager.instance.GetPlayerName(), new myVector3(positionX, positionY, positionZ));
+            Message message = new Message(MessageType.Broadcast, DoingType.ADD_PLAYER, playerData, GameManager.instance.GetPlayerName(), 0);
+            Debug.Log(JsonConvert.SerializeObject(message));
             SendDataToServer(message);
 
             // 开始异步接收数据
@@ -73,7 +103,7 @@ public class SocketClient : MonoBehaviour
 
                 // 处理收到的消息
                 string receivedMessage = Encoding.UTF8.GetString(receivedData);
-                Debug.Log("Received from server: " + receivedMessage);
+                ReceiveMessage.receivedMessage = receivedMessage;
 
                 // 继续异步接收数据
                 socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ReceiveCallback, socket);

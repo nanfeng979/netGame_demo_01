@@ -1,5 +1,7 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class Main {
     private static final int PORT = 8888;
 
-    public static Map<Socket, String> PlayerList;
+    public static Map<Socket, PlayerData> PlayerList;
 
     public static void main(String[] args) {
         PlayerList = new HashMap<>();
@@ -29,7 +31,7 @@ public class Main {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("客户端连接成功，IP: " + clientSocket.getInetAddress() + ", 端口: " + clientSocket.getPort());
                 if (!PlayerList.containsKey(clientSocket)) {
-                    PlayerList.put(clientSocket, "");
+                    PlayerList.put(clientSocket, new PlayerData());
                 }
 
                 // 创建一个新线程处理客户端连接
@@ -56,8 +58,8 @@ public class Main {
 
     private static void printPlayerList() {
         System.out.println("当前玩家列表：");
-        for (Map.Entry<Socket, String> entry : PlayerList.entrySet()) {
-            System.out.print(entry.getValue() + "__");
+        for (Map.Entry<Socket, PlayerData> entry : PlayerList.entrySet()) {
+            System.out.print(entry.getValue().getName() + "__");
         }
         System.out.println();
         System.out.println("--------------------");

@@ -29,6 +29,7 @@ public class ReadManager : MonoBehaviour
     private void OnClickA()
     {
         GameManager.instance.SetPlayerName("playerA");
+        GameManager.instance.playerList.Add("playerA");
         SceneManager.LoadScene("Playing");
 
     }
@@ -36,6 +37,7 @@ public class ReadManager : MonoBehaviour
     private void OnClickB()
     {
         GameManager.instance.SetPlayerName("playerB");
+        GameManager.instance.playerList.Add("playerB");
         SceneManager.LoadScene("Playing");
     }
 }

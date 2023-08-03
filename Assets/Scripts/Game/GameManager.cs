@@ -8,6 +8,8 @@ public class GameManager : MonoBehaviour
 
     private string playerName;
 
+    public List<string> playerList = new List<string>();
+
     void Awake()
     {
         if (instance == null) {
