@@ -32,8 +32,10 @@ public class ReceiveMessage : MonoBehaviour
                     }
                 }
                 else if (message.doing == DoingType.UPDATE_DATA) {
-                    for (int j = 0; j < PlayerManager.playerList.Count; j++) {
-                        GameObject.Find(message.playerData.name).transform.position = new Vector3(message.playerData.position.x, message.playerData.position.y, message.playerData.position.z);
+                    if (message.playerData.type == PlayerDataType.UPDATE_POSITION) {
+                        for (int j = 0; j < PlayerManager.playerList.Count; j++) {
+                            GameObject.Find(message.playerData.name).transform.position = new Vector3(message.playerData.position.x, message.playerData.position.y, message.playerData.position.z);
+                        }
                     }
                 }
             }

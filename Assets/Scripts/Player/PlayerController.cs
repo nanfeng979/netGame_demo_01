@@ -55,6 +55,7 @@ public class PlayerController : MonoBehaviour
     }
 
     private void Connect() {
+        message.playerData.SetType(PlayerDataType.UPDATE_POSITION);
         message.playerData.setPosition(new myVector3(PlayerManager.currentPlayerPosition));
         SocketClient.SendDataToServer(message);
     }

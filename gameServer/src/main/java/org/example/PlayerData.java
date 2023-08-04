@@ -3,7 +3,8 @@ package org.example;
 enum PlayerDataType {
     ADD_PLAYER,
     REMOVE_PLAYER,
-    UPDATE_DATA
+    UPDATE_DATA,
+    UPDATE_POSITION,
 }
 
 public class PlayerData {
