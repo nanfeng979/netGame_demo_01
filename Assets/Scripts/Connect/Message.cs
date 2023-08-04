@@ -5,7 +5,7 @@ public enum DoingType {
     ADD_PLAYER,
     REMOVE_PLAYER,
     UPDATE_DATA,
-    UPDATE_PLAYER
+    UPDATE_PLAYER,
 }
 
 public enum MessageType {

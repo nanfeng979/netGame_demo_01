@@ -28,16 +28,20 @@ public class ReadManager : MonoBehaviour
 
     private void OnClickA()
     {
-        GameManager.instance.SetPlayerName("playerA");
-        GameManager.instance.playerList.Add("playerA");
+        SetCurrentPlayer("PlayerA");
         SceneManager.LoadScene("Playing");
 
     }
 
     private void OnClickB()
     {
-        GameManager.instance.SetPlayerName("playerB");
-        GameManager.instance.playerList.Add("playerB");
+        SetCurrentPlayer("PlayerB");
         SceneManager.LoadScene("Playing");
+    }
+
+    private void SetCurrentPlayer(string player) {
+        PlayerManager.SetCurrentPlayerName(player);
+        PlayerManager.playerList.Add(player);
+        Debug.Log(PlayerManager.GetCurrentPlayerName());
     }
 }

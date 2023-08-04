@@ -4,7 +4,7 @@ using Newtonsoft.Json.Converters;
 public enum PlayerDataType {
     ADD_PLAYER,
     REMOVE_PLAYER,
-    UPDATE_DATA
+    UPDATE_DATA,
 }
 
 public class PlayerData {

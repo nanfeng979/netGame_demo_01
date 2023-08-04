@@ -6,10 +6,6 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
-    private string playerName;
-
-    public List<string> playerList = new List<string>();
-
     void Awake()
     {
         if (instance == null) {
@@ -28,13 +24,5 @@ public class GameManager : MonoBehaviour
         
     }
 
-    public void SetPlayerName(string name)
-    {
-        playerName = name;
-    }
-
-    public string GetPlayerName()
-    {
-        return playerName;
-    }
+    
 }

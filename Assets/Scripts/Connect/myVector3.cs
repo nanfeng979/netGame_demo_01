@@ -1,12 +1,22 @@
+using UnityEngine;
+
 public class myVector3 {
     public float x;
     public float y;
     public float z;
 
+    public myVector3() {}
+
     public myVector3(float x, float y, float z) {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    public myVector3(Vector3 vector3) {
+        this.x = vector3.x;
+        this.y = vector3.y;
+        this.z = vector3.z;
     }
 
     public float getX() {

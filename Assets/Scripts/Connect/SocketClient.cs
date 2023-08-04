@@ -10,42 +10,35 @@ public class SocketClient : MonoBehaviour
 {
     private const string serverIP = "127.0.0.1"; // 服务端IP地址
     private const int serverPort = 8888;        // 服务端监听的端口号
-    private Socket clientSocket;
-    private byte[] receiveBuffer = new byte[1024];
-
-    [SerializeField]
-    private GameObject player;
-
-    private float timer = 1.0f;
-    private float cd = 0.0f;
+    private static Socket clientSocket;
+    private readonly byte[] receiveBuffer = new byte[1024];
+    private string currentPlayerName;
 
     private void Start()
     {
+        currentPlayerName = PlayerManager.GetCurrentPlayerName();
+
         ConnectToServer();
+
+        InvokeRepeating(nameof(Update_player), 1.0f, 1.0f);
     }
 
     private void Update()
     {
-        // 1s执行一次Update_player()
-        cd += Time.deltaTime;
-        if(cd > timer) {
-            cd = 0;
-            Update_player();
-        }
-        // Invoke(nameof(Update_player), 3.0f);
+        
     }
 
     private void Update_player()
     {
-        PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, "", null);
-        Message message = new Message(MessageType.Broadcast, DoingType.UPDATE_PLAYER, playerData, GameManager.instance.GetPlayerName(), 0);
+        PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, currentPlayerName, null);
+        Message message = new Message(MessageType.Broadcast, DoingType.UPDATE_PLAYER, playerData, currentPlayerName, 0);
         SendDataToServer(message);
     }
 
     private void OnDestroy() {
         // 发送断开消息
-        PlayerData playerData = new PlayerData(PlayerDataType.REMOVE_PLAYER, "", null);
-        Message message = new Message(MessageType.Broadcast, DoingType.REMOVE_PLAYER, playerData, GameManager.instance.GetPlayerName(), 0);
+        PlayerData playerData = new PlayerData(PlayerDataType.REMOVE_PLAYER, currentPlayerName, null);
+        Message message = new Message(MessageType.Broadcast, DoingType.REMOVE_PLAYER, playerData, currentPlayerName, 0);
         SendDataToServer(message);
         clientSocket.Close();
     }
@@ -59,7 +52,7 @@ public class SocketClient : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error connecting to server: " + e.Message);
+            Debug.LogError("连接到服务器失败: " + e.Message);
         }
     }
 
@@ -69,14 +62,12 @@ public class SocketClient : MonoBehaviour
         {
             Socket socket = (Socket)ar.AsyncState;
             socket.EndConnect(ar);
-            Debug.Log("Connected to server.");
+            Debug.Log("已连接到服务器.");
 
             // 发送连接消息
-            float positionX = 0;
-            float positionY = 0;
-            float positionZ = 0;
-            PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, GameManager.instance.GetPlayerName(), new myVector3(positionX, positionY, positionZ));
-            Message message = new Message(MessageType.Broadcast, DoingType.ADD_PLAYER, playerData, GameManager.instance.GetPlayerName(), 0);
+            // 需放在此处，紧接着开始异步接收数据
+            PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, PlayerManager.GetCurrentPlayerName(), new myVector3(PlayerManager.currentPlayerPosition));
+            Message message = new Message(MessageType.Broadcast, DoingType.ADD_PLAYER, playerData, PlayerManager.GetCurrentPlayerName(), 0);
             Debug.Log(JsonConvert.SerializeObject(message));
             SendDataToServer(message);
 
@@ -85,7 +76,7 @@ public class SocketClient : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error in ConnectCallback: " + e.Message);
+            Debug.LogError("调用连接回调函数失败: " + e.Message);
         }
     }
 
@@ -111,11 +102,11 @@ public class SocketClient : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error in ReceiveCallback: " + e.Message);
+            Debug.LogError("调用接收回调函数失败: " + e.Message);
         }
     }
 
-    public void SendDataToServer(Message data)
+    public static void SendDataToServer(Message data)
     {
         try
         {
@@ -124,11 +115,11 @@ public class SocketClient : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error sending data to server: " + e.Message);
+            Debug.LogError("发送数据失败: " + e.Message);
         }
     }
 
-    private void SendCallback(IAsyncResult ar)
+    private static void SendCallback(IAsyncResult ar)
     {
         try
         {
@@ -137,7 +128,7 @@ public class SocketClient : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error in SendCallback: " + e.Message);
+            Debug.LogError("调用发送回调函数失败: " + e.Message);
         }
     }
 }

@@ -11,6 +11,14 @@ public class PlayerController : MonoBehaviour
     private float moveX;
     private float moveY;
 
+    private void Awake()
+    {
+        float RandomX = Random.Range(-3.0f, 3.0f);
+        float RandomZ = Random.Range(-3.0f, 3.0f);
+        transform.position = new Vector3(RandomX, 0, RandomZ);
+        PlayerManager.currentPlayerPosition = transform.position;
+    }
+
     void Start()
     {
         
