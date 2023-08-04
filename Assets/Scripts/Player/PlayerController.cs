@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
 {
     public float rotateSpeed = 5.0f;
     private float mouseX;
+    private float mouseXoffset;
 
     public float moveSpeed = 5.0f;
     private float moveX;
@@ -24,7 +25,7 @@ public class PlayerController : MonoBehaviour
         transform.position = new Vector3(RandomX, 0, RandomZ);
         PlayerManager.currentPlayerPosition = transform.position;
 
-        playerData = new PlayerData(PlayerDataType.UPDATE_DATA, PlayerManager.GetCurrentPlayerName(), new myVector3(PlayerManager.currentPlayerPosition));
+        playerData = new PlayerData(PlayerDataType.UPDATE_DATA, PlayerManager.GetCurrentPlayerName(), new myVector3(PlayerManager.currentPlayerPosition), new myVector3(PlayerManager.currentPlayerRotation));
         message = new Message(MessageType.Broadcast, DoingType.UPDATE_DATA, playerData, PlayerManager.GetCurrentPlayerName(), 0);
     }
 
@@ -40,8 +41,13 @@ public class PlayerController : MonoBehaviour
     }
 
     private void Rotate() {
-        mouseX += Input.GetAxis("Mouse X") * rotateSpeed;
-        transform.rotation = Quaternion.Euler(0, mouseX, 0);
+        mouseXoffset = Input.GetAxis("Mouse X") * rotateSpeed;
+        if (mouseXoffset != 0) {
+            mouseX += mouseXoffset;
+            PlayerManager.currentPlayerRotation = new Vector3(0, mouseX, 0);
+            message.playerData.setRotation(new myVector3(PlayerManager.currentPlayerRotation));
+            Connect(PlayerDataType.UPDATE_ROTATION);
+        }
     }
 
     private void Move() {
@@ -50,13 +56,14 @@ public class PlayerController : MonoBehaviour
         if (moveX != 0 || moveY != 0) {
             PlayerManager.currentPlayerPosition += moveX * moveSpeed * Time.deltaTime * transform.right;
             PlayerManager.currentPlayerPosition += moveY * moveSpeed * Time.deltaTime * transform.forward;
-            Connect();
+            message.playerData.setPosition(new myVector3(PlayerManager.currentPlayerPosition));
+            Connect(PlayerDataType.UPDATE_POSITION);
         }
     }
 
-    private void Connect() {
-        message.playerData.SetType(PlayerDataType.UPDATE_POSITION);
-        message.playerData.setPosition(new myVector3(PlayerManager.currentPlayerPosition));
+    private void Connect(PlayerDataType playerDataType) {
+        message.playerData.SetType(playerDataType);
+        
         SocketClient.SendDataToServer(message);
     }
 }

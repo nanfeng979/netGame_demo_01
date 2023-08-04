@@ -37,6 +37,11 @@ public class ReceiveMessage : MonoBehaviour
                             GameObject.Find(message.playerData.name).transform.position = new Vector3(message.playerData.position.x, message.playerData.position.y, message.playerData.position.z);
                         }
                     }
+                    else if (message.playerData.type == PlayerDataType.UPDATE_ROTATION) {
+                        for (int j = 0; j < PlayerManager.playerList.Count; j++) {
+                            GameObject.Find(message.playerData.name).transform.rotation = Quaternion.Euler(message.playerData.rotation.x, message.playerData.rotation.y, message.playerData.rotation.z);
+                        }
+                    }
                 }
             }
             receivedMessage = null;

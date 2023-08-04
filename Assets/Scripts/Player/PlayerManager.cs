@@ -9,6 +9,7 @@ public class PlayerManager : MonoBehaviour
     public static List<string> playerList = new List<string>();
 
     public static Vector3 currentPlayerPosition;
+    public static Vector3 currentPlayerRotation;
 
     private void Awake()
     {

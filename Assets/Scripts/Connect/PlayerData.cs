@@ -6,6 +6,7 @@ public enum PlayerDataType {
     REMOVE_PLAYER,
     UPDATE_DATA,
     UPDATE_POSITION,
+    UPDATE_ROTATION,
 }
 
 public class PlayerData {
@@ -13,15 +14,17 @@ public class PlayerData {
     public PlayerDataType type;
     public string name;
     public myVector3 position;
+    public myVector3 rotation;
 
     public PlayerData() {
 
     }
 
-    public PlayerData(PlayerDataType type, string name,myVector3 position) {
+    public PlayerData(PlayerDataType type, string name,myVector3 position, myVector3 rotation) {
         this.type = type;
         this.name = name;
         this.position = position;
+        this.rotation = rotation;
     }
 
     public PlayerDataType getType() {
@@ -48,7 +51,11 @@ public class PlayerData {
         this.position = position;
     }
 
-    public string toJson(){
-        return "{\"type\":\"" + type + "\", \"name\":\"" + name + "\", \"position\":\"" + position.toJson() + "\"}";
+    public myVector3 getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(myVector3 rotation) {
+        this.rotation = rotation;
     }
 }

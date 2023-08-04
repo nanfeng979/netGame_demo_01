@@ -30,14 +30,14 @@ public class SocketClient : MonoBehaviour
 
     private void Update_player()
     {
-        PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, currentPlayerName, null);
+        PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, currentPlayerName, null, null);
         Message message = new Message(MessageType.Broadcast, DoingType.UPDATE_PLAYER, playerData, currentPlayerName, 0);
         SendDataToServer(message);
     }
 
     private void OnDestroy() {
         // 发送断开消息
-        PlayerData playerData = new PlayerData(PlayerDataType.REMOVE_PLAYER, currentPlayerName, null);
+        PlayerData playerData = new PlayerData(PlayerDataType.REMOVE_PLAYER, currentPlayerName, null, null);
         Message message = new Message(MessageType.Broadcast, DoingType.REMOVE_PLAYER, playerData, currentPlayerName, 0);
         SendDataToServer(message);
         clientSocket.Close();
@@ -66,7 +66,7 @@ public class SocketClient : MonoBehaviour
 
             // 发送连接消息
             // 需放在此处，紧接着开始异步接收数据
-            PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, PlayerManager.GetCurrentPlayerName(), new myVector3(PlayerManager.currentPlayerPosition));
+            PlayerData playerData = new PlayerData(PlayerDataType.ADD_PLAYER, PlayerManager.GetCurrentPlayerName(), new myVector3(PlayerManager.currentPlayerPosition), new myVector3(PlayerManager.currentPlayerRotation));
             Message message = new Message(MessageType.Broadcast, DoingType.ADD_PLAYER, playerData, PlayerManager.GetCurrentPlayerName(), 0);
             Debug.Log(JsonConvert.SerializeObject(message));
             SendDataToServer(message);
