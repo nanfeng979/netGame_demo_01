@@ -26,13 +26,17 @@ public class ReceiveMessage : MonoBehaviour
 
                 if (message.doing == DoingType.UPDATE_PLAYER) {
                     if (!PlayerManager.playerList.Contains(message.playerData.name)) {
-                        Debug.Log("开始生成");
-                        Instantiate(playerPrefab, new Vector3(message.playerData.position.x, message.playerData.position.y, message.playerData.position.z), Quaternion.identity);
+                        GameObject tempObj = Instantiate(playerPrefab, new Vector3(message.playerData.position.x, message.playerData.position.y, message.playerData.position.z), Quaternion.identity);
+                        tempObj.name = message.playerData.name;
                         PlayerManager.playerList.Add(message.playerData.name);
                     }
                 }
+                else if (message.doing == DoingType.UPDATE_DATA) {
+                    for (int j = 0; j < PlayerManager.playerList.Count; j++) {
+                        GameObject.Find(message.playerData.name).transform.position = new Vector3(message.playerData.position.x, message.playerData.position.y, message.playerData.position.z);
+                    }
+                }
             }
-            
             receivedMessage = null;
         }
     }

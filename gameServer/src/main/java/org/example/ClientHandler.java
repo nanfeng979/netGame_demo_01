@@ -53,6 +53,16 @@ class ClientHandler implements Runnable {
                 // 向某一方更新所有的玩家信息
                 Update_Player_Single(socket);
             }
+            else if (message.getDoing() == DoingType.UPDATE_DATA) {
+                message.SetDoing(DoingType.UPDATE_DATA);
+                try {
+                    String jsonMessageTemp = objectMapper.writeValueAsString(message) + "&&";
+                    // 向所有玩家更新某一玩家信息
+                    broadcastMessage(jsonMessageTemp);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             // 玩家退出
             else if (message.getDoing() == DoingType.REMOVE_PLAYER) {
                 // 将该玩家从PlayerList移出
@@ -65,7 +75,7 @@ class ClientHandler implements Runnable {
         }
     }
 
-    // 向某一方更新所有的玩家信息
+    // 向某一方更新所有的玩家列表
     private static void Update_Player_Single(Socket socket) {
         // 组装所有玩家基础信息
         Message playerDataMessage = new Message();

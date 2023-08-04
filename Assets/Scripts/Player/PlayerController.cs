@@ -11,12 +11,21 @@ public class PlayerController : MonoBehaviour
     private float moveX;
     private float moveY;
 
+    // 用于连接
+    PlayerData playerData;
+    Message message;
+
     private void Awake()
     {
+        gameObject.name = PlayerManager.GetCurrentPlayerName();
+
         float RandomX = Random.Range(-3.0f, 3.0f);
         float RandomZ = Random.Range(-3.0f, 3.0f);
         transform.position = new Vector3(RandomX, 0, RandomZ);
         PlayerManager.currentPlayerPosition = transform.position;
+
+        playerData = new PlayerData(PlayerDataType.UPDATE_DATA, PlayerManager.GetCurrentPlayerName(), new myVector3(PlayerManager.currentPlayerPosition));
+        message = new Message(MessageType.Broadcast, DoingType.UPDATE_DATA, playerData, PlayerManager.GetCurrentPlayerName(), 0);
     }
 
     void Start()
@@ -39,7 +48,14 @@ public class PlayerController : MonoBehaviour
         moveX = Input.GetAxis("Horizontal");
         moveY = Input.GetAxis("Vertical");
         if (moveX != 0 || moveY != 0) {
-            transform.Translate(moveX * moveSpeed * Time.deltaTime, 0, moveY * moveSpeed * Time.deltaTime);
+            PlayerManager.currentPlayerPosition += moveX * moveSpeed * Time.deltaTime * transform.right;
+            PlayerManager.currentPlayerPosition += moveY * moveSpeed * Time.deltaTime * transform.forward;
+            Connect();
         }
+    }
+
+    private void Connect() {
+        message.playerData.setPosition(new myVector3(PlayerManager.currentPlayerPosition));
+        SocketClient.SendDataToServer(message);
     }
 }
